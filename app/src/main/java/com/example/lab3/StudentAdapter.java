@@ -1,80 +1,52 @@
 package com.example.lab3;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
-
-import androidx.annotation.NonNull;
+import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHolder> {
-    Context context;
-    List<Student> students;
-    DatabaseHelper db;
+public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentViewHolder> {
 
-    public StudentAdapter(Context context, List<Student> students) {
-        this.context = context;
-        this.students = students;
-        db = new DatabaseHelper(context);
+    private List<Student> studentList;
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(Student student);
     }
 
-    @NonNull
-    @Override
-    public StudentAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(context).inflate(R.layout.item_student, parent, false);
-        return new ViewHolder(v);
+    public StudentAdapter(List<Student> studentList, OnItemClickListener listener) {
+        this.studentList = studentList;
+        this.listener = listener;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull StudentAdapter.ViewHolder holder, int position) {
-        Student s = students.get(position);
-        holder.txtInfo.setText(s.getName() + " - " + s.getAge());
-
-        holder.itemView.setOnClickListener(v -> showEditDialog(s, position));
-        holder.itemView.setOnLongClickListener(v -> {
-            db.deleteStudent(s.getId());
-            students.remove(position);
-            notifyItemRemoved(position);
-            return true;
-        });
+    public StudentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_student, parent, false);
+        return new StudentViewHolder(itemView);
     }
 
-    private void showEditDialog(Student student, int position) {
-        View view = LayoutInflater.from(context).inflate(R.layout.dialog_update_student, null);
-        EditText edtName = view.findViewById(R.id.edt_update_name);
-        EditText edtAge = view.findViewById(R.id.edt_update_age);
+    @Override
+    public void onBindViewHolder(StudentViewHolder holder, int position) {
+        Student s = studentList.get(position);
+        holder.txtInfo.setText(s.getId() + " - " + s.getName() + " - " + s.getLop());
 
-        edtName.setText(student.getName());
-        edtAge.setText(String.valueOf(student.getAge()));
-
-        new AlertDialog.Builder(context)
-                .setTitle("Cập nhật sinh viên")
-                .setView(view)
-                .setPositiveButton("Lưu", (dialog, which) -> {
-                    student.setName(edtName.getText().toString());
-                    student.setAge(Integer.parseInt(edtAge.getText().toString()));
-                    db.updateStudent(student);
-                    notifyItemChanged(position);
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(s));
     }
 
     @Override
     public int getItemCount() {
-        return students.size();
+        return studentList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtInfo;
+    public static class StudentViewHolder extends RecyclerView.ViewHolder {
+        public TextView txtInfo;
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            txtInfo = itemView.findViewById(R.id.txt_info);
+        public StudentViewHolder(View view) {
+            super(view);
+            txtInfo = view.findViewById(R.id.txtStudent);
         }
     }
 }
